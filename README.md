@@ -1,33 +1,20 @@
 # Product Manager CPT - WordPress Plugin
 
-A comprehensive WordPress plugin for managing products with custom post types, featuring a modern UI, AJAX functionality, and easy shortcode integration.
+A lightweight WordPress plugin for managing products with custom post types and shortcode functionality.
 
 ## Features
 
 ### 🚀 Core Features
-- **Custom Post Type**: Dedicated product management system
-- **Modern Admin Interface**: Clean, responsive design with intuitive navigation
-- **AJAX-Powered**: Seamless user experience without page reloads
-- **Image Management**: Easy product image upload and management
-- **Rich Text Editor**: WordPress classic editor support for product descriptions
-- **Dynamic Buttons**: Add multiple action buttons with custom names and URLs
-- **Auto-Generated Shortcodes**: Automatic shortcode creation for each product
-- **Search & Filter**: Real-time product search functionality
-- **Copy to Clipboard**: One-click shortcode copying
-
-### 📱 User Interface
-- **Responsive Design**: Works perfectly on desktop, tablet, and mobile
-- **Card-Based Layout**: Modern product cards with hover effects
-- **Loading States**: Professional loading animations and progress indicators
-- **Success/Error Messages**: Toast-style notifications with auto-dismiss
-- **Empty States**: Helpful guidance when no products exist
+- **Custom Post Type**: Dedicated product management system (`pmcpt_product`)
+- **Shortcode Support**: Display products anywhere using `[pmcpt_product id="123"]`
+- **Meta Fields**: Support for product buttons and shortcode storage
+- **Security**: Proper WordPress standards implementation
 
 ### ⚡ Technical Features
-- **Security**: Proper nonce verification and user capability checks
-- **Sanitization**: All input data properly sanitized and validated
 - **WordPress Standards**: Follows WordPress coding standards and best practices
 - **Translation Ready**: Internationalization support with text domain
-- **Optimized Performance**: Efficient database queries and asset loading
+- **Lightweight**: Minimal footprint, no admin interface
+- **Database Efficient**: Clean post type and meta field registration
 
 ## Installation
 
@@ -41,55 +28,37 @@ A comprehensive WordPress plugin for managing products with custom post types, f
    - Find "Product Manager CPT"
    - Click "Activate"
 
-3. **Access the Plugin**
-   - Navigate to "Product Manager" in your WordPress admin menu
-
 ## Usage
 
-### Adding a New Product
+### Creating Products Programmatically
 
-1. **Go to Product Manager → Products**
-2. **Click "Add New Product"**
-3. **Fill in Product Information:**
-   - **Product Name** (required)
-   - **Product Description** (optional, supports rich text)
-   
-4. **Upload Product Image:**
-   - Click the image upload area or "Upload Image" button
-   - Select an image from your media library
-   - Remove image with the X button if needed
+Since this plugin doesn't include an admin interface, products need to be created programmatically:
 
-5. **Add Product Buttons:**
-   - Enter button name and URL
-   - Click "Add Button" to add more buttons
-   - Remove buttons with the trash icon
-   - At least one button row is always maintained
+```php
+// Create a new product
+$product_id = wp_insert_post(array(
+    'post_title' => 'My Product',
+    'post_content' => 'Product description here',
+    'post_type' => 'pmcpt_product',
+    'post_status' => 'publish'
+));
 
-6. **Save the Product:**
-   - Click "Save Product" or "Update Product"
-   - Shortcode is automatically generated
+// Add product buttons
+$buttons = array(
+    array('name' => 'Buy Now', 'url' => 'https://example.com/buy'),
+    array('name' => 'Learn More', 'url' => 'https://example.com/info')
+);
+update_post_meta($product_id, '_pmcpt_product_buttons', json_encode($buttons));
 
-### Managing Products
-
-#### Product List View
-- **Search**: Use the search box to find products by name or description
-- **Edit**: Click the "Edit" button on any product card
-- **Delete**: Click the "Delete" button (with confirmation)
-- **Copy Shortcode**: Click the copy icon next to the shortcode
-
-#### Product Cards Display
-Each product card shows:
-- Product thumbnail (if image exists)
-- Product name and creation date
-- Number of buttons configured
-- Description excerpt
-- Generated shortcode with copy button
-- Edit and Delete actions
+// Generate shortcode
+$shortcode = '[pmcpt_product id="' . $product_id . '"]';
+update_post_meta($product_id, '_pmcpt_product_shortcode', $shortcode);
+```
 
 ### Using Shortcodes
 
-#### Automatic Generation
-Each product automatically gets a shortcode in the format:
+#### Display Products
+Use the shortcode to display products anywhere in your content:
 ```
 [pmcpt_product id="123"]
 ```
@@ -101,101 +70,79 @@ The shortcode renders a product display with:
 - Product description
 - Action buttons with links
 
-#### Copy Shortcodes
-- Copy from the product edit page
-- Copy from the product list page
-- Click the copy icon for instant clipboard copy
-
 ## File Structure
 
 ```
 product-manager-cpt/
 ├── product-manager-cpt.php          # Main plugin file
-├── includes/
-│   ├── admin-products.php           # Products admin page
-│   └── admin-shortcodes.php         # Shortcodes admin page
-├── assets/
-│   ├── css/
-│   │   └── admin.css               # Admin styles
-│   └── js/
-│       └── admin.js                # Admin JavaScript
-└── README.md                       # Documentation
+└── README.md                        # Documentation
 ```
 
 ## Technical Details
 
 ### Custom Post Type
 - **Post Type**: `pmcpt_product`
-- **Visibility**: Hidden from public, managed through admin interface
+- **Visibility**: Hidden from public, not searchable
 - **Supports**: Title, editor, thumbnail
 
 ### Meta Fields
 - `_pmcpt_product_buttons`: JSON-encoded array of button data
 - `_pmcpt_product_shortcode`: Auto-generated shortcode for the product
 
-### AJAX Actions
-- `pmcpt_save_product`: Save/update product data
-- `pmcpt_delete_product`: Delete a product
-- `pmcpt_search_products`: Search products (for future enhancement)
-
 ### WordPress Hooks
 - `init`: Register post type and meta fields
-- `admin_menu`: Add admin menu pages
-- `admin_enqueue_scripts`: Load admin assets
-- `wp_ajax_*`: Handle AJAX requests
+- Activation/Deactivation hooks for cleanup
 
 ## Customization
 
 ### Styling
-The plugin uses CSS custom properties and follows WordPress admin design patterns. You can customize:
+The shortcode output uses CSS classes that you can style:
+```css
+.pmcpt-product-display { /* Main container */ }
+.pmcpt-product-image { /* Image wrapper */ }
+.pmcpt-product-content { /* Content wrapper */ }
+.pmcpt-product-title { /* Product title */ }
+.pmcpt-product-description { /* Product description */ }
+.pmcpt-product-buttons { /* Buttons container */ }
+.pmcpt-product-button { /* Individual button */ }
+```
 
-- **Colors**: Modify CSS variables in `admin.css`
-- **Layout**: Adjust grid systems and spacing
-- **Components**: Customize button styles, card layouts, etc.
-
-### Functionality
-- **Button Validation**: Modify validation rules in JavaScript
-- **Field Types**: Add new meta fields in the main plugin file
-- **UI Components**: Extend the admin interface
+### Extending Functionality
+- **Add Meta Fields**: Extend the `register_meta_fields()` method
+- **Modify Shortcode**: Customize the `pmcpt_product_shortcode()` function
+- **Add Hooks**: Use WordPress actions and filters
 
 ## Browser Support
 
-- **Modern Browsers**: Chrome, Firefox, Safari, Edge (latest versions)
-- **Mobile Browsers**: iOS Safari, Chrome Mobile
-- **Responsive**: Fully responsive design for all screen sizes
+- **All Modern Browsers**: Works with any browser that supports standard HTML/CSS
+- **No JavaScript Dependencies**: Pure server-side rendering
 
 ## Security Features
 
-- **Nonce Verification**: All AJAX requests verified with nonces
-- **Capability Checks**: User permissions validated
-- **Data Sanitization**: All input data properly sanitized
-- **SQL Injection Prevention**: Using WordPress APIs for database operations
+- **WordPress Standards**: Uses WordPress APIs for all database operations
+- **Sanitization**: All data properly sanitized when stored
+- **Capabilities**: Respects WordPress user capabilities
 
 ## Performance
 
-- **Lazy Loading**: Assets loaded only on plugin pages
-- **Optimized Queries**: Efficient database operations
-- **Minified Assets**: Compressed CSS and JavaScript (for production)
+- **Lightweight**: Minimal code footprint
+- **Efficient Queries**: Uses WordPress standard functions
+- **No Admin Assets**: No CSS/JavaScript loading in admin
 - **Caching Friendly**: Compatible with WordPress caching plugins
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Images not uploading**
-   - Check WordPress media upload permissions
-   - Verify file size limits
-   - Ensure proper WordPress media library access
-
-2. **AJAX not working**
-   - Check browser console for JavaScript errors
-   - Verify WordPress AJAX URL is accessible
-   - Ensure proper nonce generation
-
-3. **Shortcodes not displaying**
-   - Verify the product exists and is published
+1. **Shortcodes not displaying**
+   - Verify the product exists: `get_post($product_id)`
    - Check shortcode syntax: `[pmcpt_product id="123"]`
-   - Ensure proper WordPress post type registration
+   - Ensure post type is registered properly
+
+2. **Missing product data**
+   - Check meta fields exist: `get_post_meta($product_id, '_pmcpt_product_buttons', true)`
+   - Verify JSON encoding of button data
+   - Ensure product is published status
 
 ### Debug Mode
 Enable WordPress debug mode for detailed error information:
@@ -204,6 +151,28 @@ define('WP_DEBUG', true);
 define('WP_DEBUG_LOG', true);
 ```
 
+## API Reference
+
+### Functions
+
+#### `pmcpt_product_shortcode($atts)`
+Renders a product display based on provided ID.
+
+**Parameters:**
+- `$atts['id']` (int): Product ID to display
+
+**Returns:** HTML string of product display
+
+### Hooks
+
+#### Actions
+- `pmcpt_after_register_post_type`: Fired after post type registration
+- `pmcpt_after_register_meta_fields`: Fired after meta field registration
+
+#### Filters
+- `pmcpt_product_shortcode_output`: Filter shortcode output HTML
+- `pmcpt_product_button_html`: Filter individual button HTML
+
 ## Contributing
 
 This plugin follows WordPress coding standards. When contributing:
@@ -211,8 +180,7 @@ This plugin follows WordPress coding standards. When contributing:
 1. Follow WordPress PHP coding standards
 2. Use proper sanitization and validation
 3. Test across different WordPress versions
-4. Ensure responsive design compatibility
-5. Document any new features or changes
+4. Document any new features or changes
 
 ## License
 
@@ -220,7 +188,7 @@ This plugin is licensed under the GPL v2 or later.
 
 ## Support
 
-For support and feature requests, please refer to the plugin documentation or contact the developer.
+For support and feature requests, please refer to the plugin documentation.
 
 ---
 
